@@ -23,9 +23,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	colorRGB := parseColor(os.Args[5])
+	colorRGBA := parseColor(os.Args[5])
 
-	err = processImage(inputImagePath, outputImagePath, x, y, colorRGB, size)
+	err = processImage(inputImagePath, outputImagePath, x, y, colorRGBA, size)
 	if err != nil {
 		fmt.Printf("Error processing image: %v\n", err)
 		os.Exit(1)
@@ -47,7 +47,7 @@ func processImage(inputPath, outputPath string, x, y int, color_rgba color.RGBA,
 	draw.Draw(drawImg, drawImg.Bounds(), img, image.Point{}, draw.Over)
 
 	// Draw the colored square on the image
-	drawSquare(drawImg, x, y, color_rgba, size)
+	drawFilledCircle(drawImg, x, y, size, color_rgba)
 
 	// Save the modified image to the output path
 	err = saveImage(outputPath, drawImg)
@@ -90,9 +90,10 @@ func validatePositiveInt(str string) (int, error) {
 }
 
 func parseColor(colorStr string) color.RGBA {
-	var r, g, b uint8
-	fmt.Sscanf(colorStr, "%02x%02x%02x", &r, &g, &b)
-	return color.RGBA{r, g, b, 255}
+	var r, g, b, a uint8
+	fmt.Sscanf(colorStr, "%02x%02x%02x%02x", &r, &g, &b, &a)
+	fmt.Printf("%d, %d, %d, %d \n", r,g,b,a)
+	return color.RGBA{r, g, b, a}
 }
 
 func parseInt(valStr string) int {
@@ -123,6 +124,67 @@ func drawSquare(img draw.Image, x, y int, color_rgba color.RGBA, size int) {
 		&image.Uniform{color_rgba},
 		image.Point{},
 		draw.Over)
+}
+
+func drawFilledCircle(img draw.Image, x0, y0, r int, c color.RGBA) {
+	for r >= 0 {
+		drawFilledCircle_AngryWayForFilling(img, x0, y0, r, c)
+		r-=1;
+	}
+}
+
+func drawFilledCircle_AngryWayForFilling(img draw.Image, x0, y0, r int, c color.RGBA) {
+    x, y, dx, dy := r-1, 0, 1, 1
+    err := dx - (r * 2)
+
+    for x > y {
+        img.Set(x0+x, y0+y, c)
+        img.Set(x0+y, y0+x, c)
+        img.Set(x0-y, y0+x, c)
+        img.Set(x0-x, y0+y, c)
+        img.Set(x0-x, y0-y, c)
+        img.Set(x0-y, y0-x, c)
+        img.Set(x0+y, y0-x, c)
+        img.Set(x0+x, y0-y, c)
+
+		img.Set(x0+(x-1), y0+y, c)
+        img.Set(x0+(y-1), y0+x, c)
+        img.Set(x0-(y-1), y0+x, c)
+        img.Set(x0-(x-1), y0+y, c)
+        img.Set(x0-(x-1), y0-y, c)
+        img.Set(x0-(y-1), y0-x, c)
+        img.Set(x0+(y-1), y0-x, c)
+        img.Set(x0+(x-1), y0-y, c)
+
+		img.Set(x0+x, y0+(y-1), c)
+        img.Set(x0+y, y0+(x-1), c)
+        img.Set(x0-y, y0+(x-1), c)
+        img.Set(x0-x, y0+(y-1), c)
+        img.Set(x0-x, y0-(y-1), c)
+        img.Set(x0-y, y0-(x-1), c)
+        img.Set(x0+y, y0-(x-1), c)
+        img.Set(x0+x, y0-(y-1), c)
+		
+		img.Set(x0+(x-2), y0+y, c)
+        img.Set(x0+(y-2), y0+x, c)
+        img.Set(x0-(y-2), y0+x, c)
+        img.Set(x0-(x-2), y0+y, c)
+        img.Set(x0-(x-2), y0-y, c)
+        img.Set(x0-(y-2), y0-x, c)
+        img.Set(x0+(y-2), y0-x, c)
+        img.Set(x0+(x-2), y0-y, c)
+
+        if err <= 0 {
+            y++
+            err += dy
+            dy += 2
+        }
+        if err > 0 {
+            x--
+            dx += 2
+            err += dx - (r * 2)
+        }
+    }
 }
 
 func saveImage(path string, img image.Image) error {
