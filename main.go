@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if len(os.Args) != 7 {
-		fmt.Println("Usage: go run main.go <input_image_path> <output_image_path> <x> <y> <color> <size>")
+		fmt.Println("Usage: PutSquaresOnPicture <input_image_path> <output_image_path> <x> <y> <color> <size>")
 		os.Exit(1)
 	}
 
@@ -35,7 +35,7 @@ func main() {
 }
 
 
-func processImage(inputPath, outputPath string, x, y int, clr color.RGBA, size int) error {
+func processImage(inputPath, outputPath string, x, y int, color_rgba color.RGBA, size int) error {
 	// Read the input image
 	img, err := readImage(inputPath)
 	if err != nil {
@@ -47,7 +47,7 @@ func processImage(inputPath, outputPath string, x, y int, clr color.RGBA, size i
 	draw.Draw(drawImg, drawImg.Bounds(), img, image.Point{}, draw.Over)
 
 	// Draw the colored square on the image
-	drawSquare(drawImg, x, y, clr, size)
+	drawSquare(drawImg, x, y, color_rgba, size)
 
 	// Save the modified image to the output path
 	err = saveImage(outputPath, drawImg)
@@ -89,22 +89,16 @@ func validatePositiveInt(str string) (int, error) {
 	return value, nil
 }
 
-func parseCoordinates(xStr, yStr string) (x, y int) {
-	fmt.Sscanf(xStr, "%d", &x)
-	fmt.Sscanf(yStr, "%d", &y)
-	return
-}
-
 func parseColor(colorStr string) color.RGBA {
 	var r, g, b uint8
 	fmt.Sscanf(colorStr, "%02x%02x%02x", &r, &g, &b)
 	return color.RGBA{r, g, b, 255}
 }
 
-func parseInt(sizeStr string) int {
-	var size int
-	fmt.Sscanf(sizeStr, "%d", &size)
-	return size
+func parseInt(valStr string) int {
+	var val int
+	fmt.Sscanf(valStr, "%d", &val)
+	return val
 }
 
 func readImage(path string) (image.Image, error) {
@@ -118,13 +112,17 @@ func readImage(path string) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	
 
 	return img, nil
 }
 
-func drawSquare(img draw.Image, x, y int, clr color.RGBA, size int) {
-	draw.Draw(img, image.Rect(x, y, x+size, y+size), &image.Uniform{clr}, image.Point{}, draw.Over)
+func drawSquare(img draw.Image, x, y int, color_rgba color.RGBA, size int) {
+	draw.Draw(
+		img,
+		image.Rect(x, y, x+size, y+size),
+		&image.Uniform{color_rgba},
+		image.Point{},
+		draw.Over)
 }
 
 func saveImage(path string, img image.Image) error {
